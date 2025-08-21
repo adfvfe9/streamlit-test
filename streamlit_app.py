@@ -144,7 +144,6 @@ async def generate_ai_problem(language, level):
     }
     topic = level_map.get(level, "general programming concepts")
     
-    # --- 오류 수정: Java 관련 지시사항 강화 ---
     java_instruction = ""
     if language == "Java":
         java_instruction = "CRITICAL INSTRUCTION FOR JAVA: For function parameters, you MUST use primitive array types (e.g., `int[] arr`, `String[] words`). DO NOT use Collection types like `List<String>` or `ArrayList<Integer>`."
@@ -329,7 +328,7 @@ def show_dashboard():
     # --- 새 문제 생성 버튼 ---
     if st.button("🤖 AI로 새로운 문제 생성하기", type="primary", use_container_width=True, disabled=is_limit_reached):
         if is_limit_reached:
-            st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="🚨")
+            st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="�")
         else:
             with st.spinner("AI가 당신만을 위한 새로운 문제를 만들고 있습니다..."):
                 problem = asyncio.run(generate_ai_problem(user_info['language'], user_info['level']))
@@ -340,6 +339,7 @@ def show_dashboard():
                 save_api_usage(api_usage)
                 st.session_state.current_problem = problem
                 st.session_state.current_problem_points = problem['points']
+                if 'current_hint' in st.session_state: del st.session_state.current_hint # 새 문제 생성 시 이전 힌트 제거
             else:
                 st.error("문제 생성에 실패했습니다. 잠시 후 다시 시도해주세요.")
             st.rerun()
@@ -357,8 +357,17 @@ def show_dashboard():
             <b>출력 예시:</b><pre><code>{problem['example_output']}</code></pre>
             </div>""", unsafe_allow_html=True)
         
+        # --- 힌트 표시 및 닫기 ---
+        if 'current_hint' in st.session_state and st.session_state.current_hint:
+            cols = st.columns([10, 1])
+            with cols[0]:
+                st.info(f"💡 AI 힌트: {st.session_state.current_hint}")
+            with cols[1]:
+                if st.button("X", key="close_hint"):
+                    del st.session_state.current_hint
+                    st.rerun()
+        
         hint_cost = max(5, int(user_info.get('total_score', 0) * 0.1))
-        hint_placeholder = st.empty()
         
         if st.button(f"💡 힌트 보기 ({hint_cost}점 소모)", disabled=is_limit_reached):
             if user_info.get('total_score', 0) < hint_cost:
@@ -378,9 +387,10 @@ def show_dashboard():
                 user['total_score'] = user.get('total_score', 0) - hint_cost
                 save_users(users)
                 st.session_state.user_info = user
-                hint_placeholder.info(f"💡 AI 힌트: {hint_text}")
+                
+                st.session_state.current_hint = hint_text
                 st.toast(f"{hint_cost}점을 사용하여 힌트를 얻었습니다!", icon="💰")
-                time.sleep(2); st.rerun()
+                st.rerun()
 
         language = user_info['language']
         lang_map = {"Python": "python", "C": "c_cpp", "Java": "java"}
@@ -389,22 +399,20 @@ def show_dashboard():
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
         if language == "Python":
-            template = f"def {clean_stub}:\n    answer = 0\n    return answer"
+            template = f"def {clean_stub}:\n    pass"
         elif language == "C":
             template = f"""#include <stdio.h>
 #include <stdbool.h>
 #include <stdlib.h>
 
 int {clean_stub} {{
-    int answer = 0;
-    return answer;
+    
 }}
 """
         elif language == "Java":
             template = f"""class Solution {{
     public int {clean_stub} {{
-        int answer = 0;
-        return answer;
+        
     }}
 }}
 """
@@ -446,6 +454,7 @@ int {clean_stub} {{
                         
                         del st.session_state.current_problem
                         if 'current_problem_points' in st.session_state: del st.session_state.current_problem_points
+                        if 'current_hint' in st.session_state: del st.session_state.current_hint
                         st.rerun()
                     else:
                         st.session_state.grading_result = {"correct": False, "feedback": feedback}
