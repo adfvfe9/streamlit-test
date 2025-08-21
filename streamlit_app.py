@@ -69,7 +69,6 @@ def load_users():
     if not os.path.exists(USER_DATA_FILE):
         with open(USER_DATA_FILE, "w") as f: json.dump({}, f)
     
-    # --- 오류 수정: 비어있는 파일에 대한 예외 처리 ---
     try:
         with open(USER_DATA_FILE, "r") as f:
             return json.load(f)
@@ -177,17 +176,15 @@ async def generate_ai_problem(language, level):
     
     problem_data = await call_gemini_api(prompt, schema)
     if problem_data:
-        # AI가 평가한 난이도를 기반으로 점수 계산
         level_num_match = re.search(r'Level (\d+)', level)
         level_num = int(level_num_match.group(1)) if level_num_match else 1
         base_points = level_num * 10
         
         relative_difficulty = problem_data.get("relative_difficulty", 3)
-        # adjustment_factor: -0.5 (매우 쉬움) to +0.5 (매우 어려움)
         adjustment_factor = (relative_difficulty - 3) * 0.25
         
         final_points = int(base_points * (1 + adjustment_factor))
-        problem_data['points'] = max(5, final_points) # 최소 5점 보장
+        problem_data['points'] = max(5, final_points)
         
     return problem_data
 
@@ -377,6 +374,7 @@ def show_dashboard():
         # --- 다른 언어로 풀기 기능 ---
         st.write("다른 언어로 풀기:")
         cols = st.columns(3)
+        problem_id = problem.get('id')
         with cols[0]:
             if st.button("Python", use_container_width=True, disabled=(user_info['language'] == 'Python')):
                 user_info['language'] = 'Python'
@@ -384,6 +382,7 @@ def show_dashboard():
                 users = load_users()
                 users[st.session_state.username]['language'] = 'Python'
                 save_users(users)
+                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
                 st.rerun()
         with cols[1]:
             if st.button("C", use_container_width=True, disabled=(user_info['language'] == 'C')):
@@ -392,6 +391,7 @@ def show_dashboard():
                 users = load_users()
                 users[st.session_state.username]['language'] = 'C'
                 save_users(users)
+                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
                 st.rerun()
         with cols[2]:
             if st.button("Java", use_container_width=True, disabled=(user_info['language'] == 'Java')):
@@ -400,6 +400,7 @@ def show_dashboard():
                 users = load_users()
                 users[st.session_state.username]['language'] = 'Java'
                 save_users(users)
+                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
                 st.rerun()
         
         # --- 힌트 표시 및 닫기 ---
@@ -444,7 +445,7 @@ def show_dashboard():
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
         if language == "Python":
-            template = f"def {clean_stub}:\n    pass"
+            template = f"def {clean_stub}:\n    answer = 0\n    return answer"
         elif language == "C":
             template = f"""#include <stdio.h>
 #include <stdbool.h>
