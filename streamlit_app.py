@@ -421,7 +421,7 @@ def show_dashboard():
             template = f"{clean_stub} {{\n    int answer = 0;\n    return answer;\n}}"
         elif language == "Java":
             template = f"""class Solution {{
-    public {clean_stub} {{
+    {clean_stub} {{
         int answer = 0;
         return answer;
     }}
