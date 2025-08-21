@@ -8,6 +8,7 @@ import asyncio
 import httpx
 from datetime import datetime
 from streamlit_ace import st_ace # 전문 코드 에디터 라이브러리 import
+import re # 난이도 숫자 추출을 위해 import
 
 # --- 페이지 기본 설정 ---
 st.set_page_config(
@@ -160,7 +161,7 @@ async def generate_ai_problem(language, level):
     - "function_stub": The function name and its parameters. For Python/C, no keywords or types (e.g., "solution(n)"). For Java, the full method signature (e.g., "int solution(int n)").
     - "example_input": A simple, clear example of input.
     - "example_output": The corresponding output for the example input.
-    - "points": An integer value for the problem's points (Level 1: 10, ... Level 5: 50).
+    - "relative_difficulty": An integer from 1 (very easy for this level) to 5 (very hard for this level) based on your assessment of the problem's complexity.
     """
     
     schema = {
@@ -168,12 +169,28 @@ async def generate_ai_problem(language, level):
         "properties": {
             "id": {"type": "STRING"}, "title": {"type": "STRING"}, "description": {"type": "STRING"},
             "function_stub": {"type": "STRING"},
-            "example_input": {"type": "STRING"}, "example_output": {"type": "STRING"}, "points": {"type": "INTEGER"}
+            "example_input": {"type": "STRING"}, "example_output": {"type": "STRING"}, 
+            "relative_difficulty": {"type": "INTEGER"}
         },
-        "required": ["id", "title", "description", "function_stub", "example_input", "example_output", "points"]
+        "required": ["id", "title", "description", "function_stub", "example_input", "example_output", "relative_difficulty"]
     }
     
-    return await call_gemini_api(prompt, schema)
+    problem_data = await call_gemini_api(prompt, schema)
+    if problem_data:
+        # AI가 평가한 난이도를 기반으로 점수 계산
+        level_num_match = re.search(r'Level (\d+)', level)
+        level_num = int(level_num_match.group(1)) if level_num_match else 1
+        base_points = level_num * 10
+        
+        relative_difficulty = problem_data.get("relative_difficulty", 3)
+        # adjustment_factor: -0.5 (매우 쉬움) to +0.5 (매우 어려움)
+        adjustment_factor = (relative_difficulty - 3) * 0.25
+        
+        final_points = int(base_points * (1 + adjustment_factor))
+        problem_data['points'] = max(5, final_points) # 최소 5점 보장
+        
+    return problem_data
+
 
 async def get_ai_hint(problem, language):
     """AI를 이용해 문제에 대한 힌트를 생성합니다."""
@@ -357,6 +374,34 @@ def show_dashboard():
             <b>출력 예시:</b><pre><code>{problem['example_output']}</code></pre>
             </div>""", unsafe_allow_html=True)
         
+        # --- 다른 언어로 풀기 기능 ---
+        st.write("다른 언어로 풀기:")
+        cols = st.columns(3)
+        with cols[0]:
+            if st.button("Python", use_container_width=True, disabled=(user_info['language'] == 'Python')):
+                user_info['language'] = 'Python'
+                st.session_state.user_info = user_info
+                users = load_users()
+                users[st.session_state.username]['language'] = 'Python'
+                save_users(users)
+                st.rerun()
+        with cols[1]:
+            if st.button("C", use_container_width=True, disabled=(user_info['language'] == 'C')):
+                user_info['language'] = 'C'
+                st.session_state.user_info = user_info
+                users = load_users()
+                users[st.session_state.username]['language'] = 'C'
+                save_users(users)
+                st.rerun()
+        with cols[2]:
+            if st.button("Java", use_container_width=True, disabled=(user_info['language'] == 'Java')):
+                user_info['language'] = 'Java'
+                st.session_state.user_info = user_info
+                users = load_users()
+                users[st.session_state.username]['language'] = 'Java'
+                save_users(users)
+                st.rerun()
+        
         # --- 힌트 표시 및 닫기 ---
         if 'current_hint' in st.session_state and st.session_state.current_hint:
             cols = st.columns([10, 1])
@@ -410,7 +455,6 @@ int {clean_stub} {{
 }}
 """
         elif language == "Java":
-            # --- 오류 수정: Java 템플릿 생성 로직 개선 ---
             template = f"""class Solution {{
     public {clean_stub} {{
         
