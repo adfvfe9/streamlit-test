@@ -374,33 +374,6 @@ def show_dashboard():
             <b>출력 예시:</b><pre><code>{problem['example_output']}</code></pre>
             </div>""", unsafe_allow_html=True)
         
-        # --- 다른 언어로 풀기 기능 ---
-        st.write("다른 언어로 풀기:")
-        cols = st.columns(3)
-        problem_id = problem.get('id')
-        
-        def switch_language(lang):
-            user_info['language'] = lang
-            st.session_state.user_info = user_info
-            users = load_users()
-            users[st.session_state.username]['language'] = lang
-            save_users(users)
-            # 다른 언어로 바꿀 때, 해당 문제의 코드 상태를 초기화
-            editor_key = f"ace_editor_{problem_id}_{st.session_state.user_info['language']}"
-            if editor_key in st.session_state:
-                del st.session_state[editor_key]
-            st.rerun()
-
-        with cols[0]:
-            if st.button("Python", use_container_width=True, disabled=(user_info['language'] == 'Python')):
-                switch_language('Python')
-        with cols[1]:
-            if st.button("C", use_container_width=True, disabled=(user_info['language'] == 'C')):
-                switch_language('C')
-        with cols[2]:
-            if st.button("Java", use_container_width=True, disabled=(user_info['language'] == 'Java')):
-                switch_language('Java')
-        
         # --- 힌트 표시 및 닫기 ---
         if 'current_hint' in st.session_state and st.session_state.current_hint:
             cols = st.columns([10, 1])
@@ -443,13 +416,14 @@ def show_dashboard():
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
         if language == "Python":
-            template = f"def {clean_stub}:\n    \n    return"
+            template = f"def {clean_stub}:\n    answer = 0\n    return answer"
         elif language == "C":
-            template = f"{clean_stub} {{\n    \n}}"
+            template = f"{clean_stub} {{\n    int answer = 0;\n    return answer;\n}}"
         elif language == "Java":
             template = f"""class Solution {{
-    {clean_stub} {{
-        
+    public {clean_stub} {{
+        int answer = 0;
+        return answer;
     }}
 }}
 """
