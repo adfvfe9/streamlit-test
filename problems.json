@@ -1,0 +1,108 @@
+{
+  "skill_test": {
+    "Python": [
+      { "id": "PY_ST_01", "question": "Python에서 리스트의 모든 항목을 반복하기 위해 가장 일반적으로 사용되는 구문은 무엇인가요?", "options": ["for i in list:", "while i < len(list):", "foreach(item in list):", "if item in list:"], "answer": "for i in list:" },
+      { "id": "PY_ST_02", "question": "다음 코드의 출력 결과는 무엇인가요? `print(2 ** 3)`", "options": ["6", "8", "9", "12"], "answer": "8" },
+      { "id": "PY_ST_03", "question": "문자열을 정수로 변환하는 내장 함수는 무엇인가요?", "options": ["str()", "int()", "float()", "convert()"], "answer": "int()" },
+      { "id": "PY_ST_04", "question": "Python의 딕셔너리(dictionary)를 정의할 때 사용하는 기호는 무엇인가요?", "options": ["[] (대괄호)", "{} (중괄호)", "() (소괄호)", "<> (꺾쇠괄호)"], "answer": "{} (중괄호)" },
+      { "id": "PY_ST_05", "question": "파일을 열 때 '읽기' 모드를 지정하는 인자는 무엇인가요?", "options": ["'r'", "'w'", "'a'", "'x'"], "answer": "'r'" },
+      { "id": "PY_ST_06", "question": "함수를 정의할 때 사용하는 키워드는 무엇인가요?", "options": ["def", "function", "fun", "define"], "answer": "def" },
+      { "id": "PY_ST_07", "question": "조건문에서 '같지 않다'를 의미하는 연산자는 무엇인가요?", "options": ["<>", "!==", "==", "!="], "answer": "!=" },
+      { "id": "PY_ST_08", "question": "리스트의 끝에 새로운 항목을 추가하는 메소드는 무엇인가요?", "options": ["add()", "push()", "insert()", "append()"], "answer": "append()" },
+      { "id": "PY_ST_09", "question": "코드에 설명을 추가하기 위해 사용하는 주석 기호는 무엇인가요?", "options": ["// (슬래시 2개)", "/* ... */", "'#' (해시 기호)", "---"], "answer": "'#' (해시 기호)" },
+      { "id": "PY_ST_10", "question": "모듈이나 라이브러리를 코드에 포함시킬 때 사용하는 키워드는 무엇인가요?", "options": ["include", "import", "use", "require"], "answer": "import" }
+    ],
+    "C": [
+      { "id": "C_ST_01", "question": "C언어에서 변수 값을 변경할 수 없도록 선언하는 키워드는 무엇인가요?", "options": ["static", "const", "final", "let"], "answer": "const" },
+      { "id": "C_ST_02", "question": "C언어에서 문자열의 끝을 나타내는 문자는 무엇인가요?", "options": ["\\n", "\\t", "\\0", "\\e"], "answer": "\\0" },
+      { "id": "C_ST_03", "question": "C언어에서 포인터 변수를 선언할 때 사용하는 기호는 무엇인가요?", "options": ["'*' (별표)", "'&' (앰퍼샌드)", "'#' (해시)", "'$' (달러)"], "answer": "'*' (별표)" },
+      { "id": "C_ST_04", "question": "C언어의 표준 입출력 라이브러리 헤더 파일은 무엇인가요?", "options": ["<stdlib.h>", "<math.h>", "<stdio.h>", "<string.h>"], "answer": "<stdio.h>" },
+      { "id": "C_ST_05", "question": "메모리를 동적으로 할당하는 함수는 무엇인가요?", "options": ["alloc()", "malloc()", "new()", "create()"], "answer": "malloc()" },
+      { "id": "C_ST_06", "question": "구조체를 정의할 때 사용하는 키워드는 무엇인가요?", "options": ["struct", "class", "object", "record"], "answer": "struct" },
+      { "id": "C_ST_07", "question": "C언어 프로그램의 실행 시작점인 함수 이름은 무엇인가요?", "options": ["start()", "main()", "begin()", "run()"], "answer": "main()" },
+      { "id": "C_ST_08", "question": "정수형(integer) 변수를 선언하는 키워드는 무엇인가요?", "options": ["int", "integer", "number", "short"], "answer": "int" },
+      { "id": "C_ST_09", "question": "for 루프의 세 부분으로 올바르지 않은 것은 무엇인가요?", "options": ["초기화", "조건", "종료", "증감"], "answer": "종료" },
+      { "id": "C_ST_10", "question": "printf 함수에서 정수를 출력하기 위한 형식 지정자는 무엇인가요?", "options": ["%c", "%s", "%f", "%d"], "answer": "%d" }
+    ],
+    "Java": [
+        { "id": "JV_ST_01", "question": "Java 애플리케이션의 주 진입점(main entry point)이 되는 메소드 시그니처는 무엇인가요?", "options": ["public void main(String[] args)", "public static void main(String[] args)", "private static void start()", "public static main()"], "answer": "public static void main(String[] args)" },
+        { "id": "JV_ST_02", "question": "Java에서 객체를 생성할 때 사용되는 키워드는 무엇인가요?", "options": ["new", "create", "instance", "object"], "answer": "new" },
+        { "id": "JV_ST_03", "question": "상속을 위해 사용하는 키워드는 무엇인가요?", "options": ["inherits", "extends", "implements", "derives"], "answer": "extends" },
+        { "id": "JV_ST_04", "question": "인터페이스를 구현할 때 사용하는 키워드는 무엇인가요?", "options": ["inherits", "extends", "implements", "uses"], "answer": "implements" },
+        { "id": "JV_ST_05", "question": "원시 타입(primitive type)이 아닌 것은 무엇인가요?", "options": ["int", "double", "boolean", "String"], "answer": "String" },
+        { "id": "JV_ST_06", "question": "접근 제어자(access modifier)가 아닌 것은 무엇인가요?", "options": ["public", "private", "protected", "static"], "answer": "static" },
+        { "id": "JV_ST_07", "question": "예외 처리를 위해 사용하는 블록이 아닌 것은 무엇인가요?", "options": ["try", "catch", "finally", "throw"], "answer": "throw" },
+        { "id": "JV_ST_08", "question": "메소드 오버라이딩(Overriding)과 가장 관련 깊은 개념은 무엇인가요?", "options": ["상속", "캡슐화", "인터페이스", "생성자"], "answer": "상속" },
+        { "id": "JV_ST_09", "question": "배열의 길이를 알기 위해 사용하는 속성은 무엇인가요?", "options": ["size()", "length()", "length", "getSize()"], "answer": "length" },
+        { "id": "JV_ST_10", "question": "클래스의 모든 객체가 공유하는 변수를 선언할 때 사용하는 키워드는 무엇인가요?", "options": ["final", "static", "public", "shared"], "answer": "static" }
+    ]
+  },
+  "practice_problems": {
+    "Python": {
+      "Level 1: 기초 문법": [
+        { "id": "PY_L1_001", "title": "변수 값 교환하기", "description": "두 개의 정수 변수 a와 b가 주어졌을 때, 두 변수의 값을 서로 바꾸는 코드를 작성하세요.", "example_input": "a = 10, b = 20", "example_output": "a = 20, b = 10", "points": 10 },
+        { "id": "PY_L1_002", "title": "홀수 짝수 판별", "description": "사용자로부터 숫자를 하나 입력받아, 그 숫자가 홀수인지 짝수인지 판별하여 출력하는 프로그램을 작성하세요.", "example_input": "7", "example_output": "홀수입니다.", "points": 10 },
+        { "id": "PY_L1_003", "title": "문자열 반복하기", "description": "문자열 'hello'와 숫자 3이 주어졌을 때, 'hellohellohello'를 출력하는 코드를 작성하세요.", "example_input": "'hello', 3", "example_output": "'hellohellohello'", "points": 10 },
+        { "id": "PY_L1_004", "title": "리스트 길이 구하기", "description": "주어진 리스트 `[1, 2, 3, 4, 5]`의 길이를 구하는 코드를 작성하세요.", "example_input": "[1, 2, 3, 4, 5]", "example_output": "5", "points": 10 }
+      ],
+      "Level 2: 자료 구조": [
+        { "id": "PY_L2_001", "title": "리스트에서 중복 제거하기", "description": "숫자로 이루어진 리스트에서 중복된 항목을 모두 제거하고 순서를 유지한 새로운 리스트를 반환하는 함수를 작성하세요.", "example_input": "[1, 2, 3, 2, 4, 3, 5]", "example_output": "[1, 2, 3, 4, 5]", "points": 20 },
+        { "id": "PY_L2_002", "title": "딕셔너리 키-값 뒤집기", "description": "문자열을 키로, 숫자를 값으로 갖는 딕셔너리가 주어졌을 때, 키와 값을 서로 뒤집은 새로운 딕셔너리를 만드세요.", "example_input": "{'a': 1, 'b': 2, 'c': 3}", "example_output": "{1: 'a', 2: 'b', 3: 'c'}", "points": 20 },
+        { "id": "PY_L2_003", "title": "가장 큰 수 찾기", "description": "숫자로 이루어진 리스트에서 가장 큰 숫자를 찾아 반환하는 함수를 작성하세요. (내장 함수 사용 금지)", "example_input": "[10, 5, 8, 22, 15]", "example_output": "22", "points": 20 }
+      ],
+      "Level 3: 알고리즘": [
+        { "id": "PY_L3_001", "title": "피보나치 수열", "description": "n번째 피보나치 수를 계산하는 함수를 작성하세요. (재귀 호출을 사용해보세요)", "example_input": "10", "example_output": "55", "points": 30 },
+        { "id": "PY_L3_002", "title": "팩토리얼 계산하기", "description": "주어진 숫자 n의 팩토리얼(n!)을 계산하는 함수를 작성하세요.", "example_input": "5", "example_output": "120", "points": 30 },
+        { "id": "PY_L3_003", "title": "문자열 뒤집기", "description": "주어진 문자열을 뒤집는 함수를 작성하세요.", "example_input": "'hello'", "example_output": "'olleh'", "points": 30 }
+      ],
+      "Level 4: 심화": [
+        { "id": "PY_L4_001", "title": "간단한 웹 스크레이퍼", "description": "requests와 BeautifulSoup 라이브러리를 사용하여 특정 웹 페이지의 제목을 가져오는 함수를 작성하세요.", "example_input": "https://www.google.com", "example_output": "Google", "points": 40 },
+        { "id": "PY_L4_002", "title": "리스트 컴프리헨션", "description": "1부터 10까지의 숫자 중 짝수만을 제곱하여 새로운 리스트를 만드는 코드를 리스트 컴프리헨션을 사용하여 한 줄로 작성하세요.", "example_input": "없음", "example_output": "[4, 16, 36, 64, 100]", "points": 40 }
+      ],
+      "Level 5: 전문가": [
+        { "id": "PY_L5_001", "title": "데코레이터 만들기", "description": "함수의 실행 시간을 측정하여 출력하는 데코레이터를 만드세요.", "example_input": "실행 시간을 측정할 함수", "example_output": "함수 실행 시간: X.XX초", "points": 50 },
+        { "id": "PY_L5_002", "title": "제너레이터 만들기", "description": "호출될 때마다 1, 2, 3을 차례로 반환하는 간단한 제너레이터 함수를 작성하세요.", "example_input": "gen = simple_generator()", "example_output": "next(gen) -> 1, next(gen) -> 2, ...", "points": 50 }
+      ]
+    },
+    "C": {
+      "Level 1: 기초 문법": [
+        { "id": "C_L1_001", "title": "섭씨를 화씨로 변환", "description": "섭씨 온도를 입력받아 화씨 온도로 변환하여 출력하는 프로그램을 작성하세요. 공식: F = C * 9/5 + 32", "example_input": "25", "example_output": "77.0", "points": 10 },
+        { "id": "C_L1_002", "title": "두 수의 사칙연산", "description": "두 개의 정수를 입력받아 덧셈, 뺄셈, 곱셈, 나눗셈 결과를 출력하는 프로그램을 작성하세요.", "example_input": "10, 5", "example_output": "15, 5, 50, 2", "points": 10 }
+      ],
+      "Level 2: 포인터와 배열": [
+        { "id": "C_L2_001", "title": "배열의 합계 구하기", "description": "정수 배열과 그 크기를 인자로 받아 모든 요소의 합을 반환하는 함수를 작성하세요.", "example_input": "int arr[] = {1, 2, 3, 4, 5};", "example_output": "15", "points": 20 },
+        { "id": "C_L2_002", "title": "포인터로 변수 값 바꾸기", "description": "두 정수 변수의 주소를 인자로 받아, 두 변수의 값을 서로 바꾸는 함수를 작성하세요.", "example_input": "int a=10, b=20; swap(&a, &b);", "example_output": "a=20, b=10", "points": 20 }
+      ],
+      "Level 3: 자료 구조": [
+        { "id": "C_L3_001", "title": "문자열 뒤집기", "description": "문자열을 입력받아 그 순서를 뒤집는 함수를 작성하세요. (포인터 사용)", "example_input": "\"hello\"", "example_output": "\"olleh\"", "points": 30 },
+        { "id": "C_L3_002", "title": "연결 리스트 노드 삽입", "description": "단순 연결 리스트의 맨 앞에 새로운 노드를 삽입하는 함수를 작성하세요.", "example_input": "Head -> [1] -> [2]", "example_output": "Head -> [New] -> [1] -> [2]", "points": 30 }
+      ],
+      "Level 4: 동적 할당": [
+        { "id": "C_L4_001", "title": "동적 배열 생성", "description": "사용자로부터 정수 N을 입력받아, N개의 정수를 저장할 수 있는 배열을 동적으로 할당하고 1부터 N까지 채우는 코드를 작성하세요.", "example_input": "5", "example_output": "배열: [1, 2, 3, 4, 5]", "points": 40 }
+      ],
+      "Level 5: 시스템 프로그래밍": [
+        { "id": "C_L5_001", "title": "간단한 파일 복사", "description": "원본 파일의 이름을 입력받아, 해당 파일의 내용을 'copy.txt'라는 이름의 새 파일로 복사하는 프로그램을 작성하세요.", "example_input": "original.txt", "example_output": "copy.txt 파일 생성", "points": 50 }
+      ]
+    },
+    "Java": {
+      "Level 1: 기초 문법": [
+        { "id": "JV_L1_001", "title": "구구단 출력", "description": "사용자로부터 2에서 9 사이의 숫자를 입력받아, 해당하는 구구단을 출력하는 프로그램을 작성하세요.", "example_input": "3", "example_output": "3 * 1 = 3\n3 * 2 = 6\n...", "points": 10 },
+        { "id": "JV_L1_002", "title": "최대값 찾기", "description": "세 개의 정수 a, b, c 중에서 가장 큰 수를 찾아 출력하는 프로그램을 작성하세요.", "example_input": "a=10, b=30, c=20", "example_output": "30", "points": 10 }
+      ],
+      "Level 2: 객체 지향": [
+        { "id": "JV_L2_001", "title": "Calculator 클래스", "description": "덧셈, 뺄셈, 곱셈, 나눗셈 메소드를 가진 간단한 Calculator 클래스를 작성하고 테스트하세요.", "example_input": "Calculator calc = new Calculator();\ncalc.add(5, 3);", "example_output": "8", "points": 20 },
+        { "id": "JV_L2_002", "title": "학생 정보 클래스", "description": "이름, 학번, 학년을 속성으로 갖는 `Student` 클래스를 작성하고, 학생 정보를 출력하는 메소드를 포함시키세요.", "example_input": "Student s = new Student(\"홍길동\", 202401, 1);", "example_output": "이름: 홍길동, 학번: 202401, 학년: 1", "points": 20 }
+      ],
+      "Level 3: 컬렉션 프레임워크": [
+        { "id": "JV_L3_001", "title": "ArrayList에서 특정 요소 제거", "description": "문자열을 담고 있는 ArrayList에서 'remove'라는 문자열을 모두 제거하는 코드를 작성하세요.", "example_input": "['apple', 'remove', 'banana', 'remove']", "example_output": "['apple', 'banana']", "points": 30 },
+        { "id": "JV_L3_002", "title": "HashMap으로 단어 빈도수 세기", "description": "문자열 배열이 주어졌을 때, 각 단어가 몇 번 나타나는지 HashMap을 사용하여 계산하세요.", "example_input": "[\"apple\", \"banana\", \"apple\"]", "example_output": "{apple=2, banana=1}", "points": 30 }
+      ],
+      "Level 4: 상속과 인터페이스": [
+        { "id": "JV_L4_001", "title": "도형 넓이 계산", "description": "'Shape' 인터페이스(getArea() 메소드 포함)를 만들고, 이를 구현하는 'Circle'과 'Rectangle' 클래스를 작성하세요.", "example_input": "Shape circle = new Circle(5);", "example_output": "78.539...", "points": 40 }
+      ],
+      "Level 5: 예외 처리": [
+        { "id": "JV_L5_001", "title": "숫자 입력 예외 처리", "description": "사용자로부터 정수를 입력받되, 만약 정수가 아닌 값이 입력되면 '유효한 숫자를 입력해주세요.'라고 출력하고 다시 입력받는 코드를 작성하세요.", "example_input": "\"abc\"", "example_output": "유효한 숫자를 입력해주세요.", "points": 50 }
+      ]
+    }
+  }
+}
