@@ -146,7 +146,7 @@ async def generate_ai_problem(language, level):
     
     lang_instruction = ""
     if language == "Java":
-        lang_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including return type and parameters (e.g., `public int solution(int n)`, `public String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
+        lang_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including `public`, return type and parameters (e.g., `public int solution(int n)`, `public String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
     elif language == "C":
         lang_instruction = "CRITICAL INSTRUCTION FOR C: For the 'function_stub', you MUST provide the full function signature including return type and parameters (e.g., `int solution(int n)`, `char* solution(char* s)`)."
 
@@ -386,7 +386,9 @@ def show_dashboard():
             users[st.session_state.username]['language'] = lang
             save_users(users)
             # 다른 언어로 바꿀 때, 해당 문제의 코드 상태를 초기화
-            st.session_state[f"code_content_{problem_id}"] = None
+            editor_key = f"ace_editor_{problem_id}_{st.session_state.user_info['language']}"
+            if editor_key in st.session_state:
+                del st.session_state[editor_key]
             st.rerun()
 
         with cols[0]:
@@ -441,20 +443,19 @@ def show_dashboard():
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
         if language == "Python":
-            template = f"def {clean_stub}:\n    # Your code here\n    return"
+            template = f"def {clean_stub}:\n    \n    return"
         elif language == "C":
-            template = f"{clean_stub} {{\n    // Your code here\n}}"
+            template = f"{clean_stub} {{\n    \n}}"
         elif language == "Java":
             template = f"""class Solution {{
     {clean_stub} {{
-        // Your code here
+        
     }}
 }}
 """
         else:
             template = ""
         
-        # 언어 변경 시 템플릿을 다시 그리도록 key를 동적으로 생성
         editor_key = f"ace_editor_{problem.get('id')}_{language}"
         
         user_code = st_ace(
