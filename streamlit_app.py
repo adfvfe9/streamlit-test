@@ -146,7 +146,7 @@ async def generate_ai_problem(language, level):
     
     java_instruction = ""
     if language == "Java":
-        java_instruction = "CRITICAL INSTRUCTION FOR JAVA: For function parameters, you MUST use primitive array types (e.g., `int[] arr`, `String[] words`). DO NOT use Collection types like `List<String>` or `ArrayList<Integer>`."
+        java_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including return type and parameters (e.g., `int solution(int n)`, `String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
 
     prompt = f"""Create a new, unique programming problem for a user learning {language}.
     The topic should be about {topic}.
@@ -157,7 +157,7 @@ async def generate_ai_problem(language, level):
     - "id": A unique string identifier (e.g., "AI_PY_L1_...")
     - "title": A short, descriptive title in Korean.
     - "description": A clear problem description in Korean.
-    - "function_stub": The function name and its parameters ONLY, without any keywords like 'def' or trailing colons. (e.g., "solution(n)", "solution(int[] arr, int divisor)").
+    - "function_stub": The function name and its parameters. For Python/C, no keywords or types (e.g., "solution(n)"). For Java, the full method signature (e.g., "int solution(int n)").
     - "example_input": A simple, clear example of input.
     - "example_output": The corresponding output for the example input.
     - "points": An integer value for the problem's points (Level 1: 10, ... Level 5: 50).
@@ -328,7 +328,7 @@ def show_dashboard():
     # --- 새 문제 생성 버튼 ---
     if st.button("🤖 AI로 새로운 문제 생성하기", type="primary", use_container_width=True, disabled=is_limit_reached):
         if is_limit_reached:
-            st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="�")
+            st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="🚨")
         else:
             with st.spinner("AI가 당신만을 위한 새로운 문제를 만들고 있습니다..."):
                 problem = asyncio.run(generate_ai_problem(user_info['language'], user_info['level']))
@@ -410,8 +410,9 @@ int {clean_stub} {{
 }}
 """
         elif language == "Java":
+            # --- 오류 수정: Java 템플릿 생성 로직 개선 ---
             template = f"""class Solution {{
-    public int {clean_stub} {{
+    public {clean_stub} {{
         
     }}
 }}
