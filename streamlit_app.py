@@ -385,9 +385,8 @@ def show_dashboard():
             users = load_users()
             users[st.session_state.username]['language'] = lang
             save_users(users)
-            # 현재 언어의 코드 에디터 상태를 삭제하여 리셋
-            if f"ace_editor_{problem_id}_{st.session_state.user_info['language']}" in st.session_state:
-                del st.session_state[f"ace_editor_{problem_id}_{st.session_state.user_info['language']}"]
+            # 다른 언어로 바꿀 때, 해당 문제의 코드 상태를 초기화
+            st.session_state[f"code_content_{problem_id}"] = None
             st.rerun()
 
         with cols[0]:
@@ -442,29 +441,32 @@ def show_dashboard():
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
         if language == "Python":
-            template = f"def {clean_stub}:\n    answer = 0\n    return answer"
+            template = f"def {clean_stub}:\n    # Your code here\n    return"
         elif language == "C":
-            template = f"{clean_stub} {{\n    \n}}"
+            template = f"{clean_stub} {{\n    // Your code here\n}}"
         elif language == "Java":
             template = f"""class Solution {{
     {clean_stub} {{
-        
+        // Your code here
     }}
 }}
 """
         else:
             template = ""
-
+        
+        # 언어 변경 시 템플릿을 다시 그리도록 key를 동적으로 생성
+        editor_key = f"ace_editor_{problem.get('id')}_{language}"
+        
         user_code = st_ace(
-            value=st.session_state.get(f"ace_editor_{problem.get('id')}_{language}", template),
+            value=st.session_state.get(editor_key, template),
             language=lang_map.get(language, "text"),
             theme="tomorrow_night_blue", keybinding="vscode", font_size=14,
             height=300, wrap=True, auto_update=True,
-            key=f"ace_editor_{problem.get('id')}_{language}"
+            key=editor_key
         )
         
         if st.button("AI에게 채점받기"):
-            st.session_state[f"ace_editor_{problem.get('id')}_{language}"] = user_code
+            st.session_state[editor_key] = user_code
             if not user_code.strip(): st.warning("코드를 입력해주세요.")
             else:
                 api_usage = load_api_usage()
