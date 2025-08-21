@@ -8,5 +8,15 @@
             "PY_L1_004"
         ],
         "total_score": 10
+    },
+    "bedulge": {
+        "password": "2aec84e1dc18467c7f3e02e381f18df604b8b949a9271ac32acc231a22314887",
+        "skill_test_taken": true,
+        "language": "Java",
+        "level": "Level 2: \uc790\ub8cc \uad6c\uc870",
+        "solved_problems": [
+            "PY1002"
+        ],
+        "total_score": 10
     }
 }
