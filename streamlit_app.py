@@ -144,20 +144,23 @@ async def generate_ai_problem(language, level):
     }
     topic = level_map.get(level, "general programming concepts")
     
-    java_instruction = ""
+    lang_instruction = ""
     if language == "Java":
-        java_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including return type and parameters (e.g., `int solution(int n)`, `String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
+        lang_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including return type and parameters (e.g., `public int solution(int n)`, `public String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
+    elif language == "C":
+        lang_instruction = "CRITICAL INSTRUCTION FOR C: For the 'function_stub', you MUST provide the full function signature including return type and parameters (e.g., `int solution(int n)`, `char* solution(char* s)`)."
+
 
     prompt = f"""Create a new, unique programming problem for a user learning {language}.
     The topic should be about {topic}.
     The problem must be solvable within a single function.
-    {java_instruction}
+    {lang_instruction}
     
     Respond ONLY in JSON format with the following keys:
     - "id": A unique string identifier (e.g., "AI_PY_L1_...")
     - "title": A short, descriptive title in Korean.
     - "description": A clear problem description in Korean.
-    - "function_stub": The function name and its parameters. For Python/C, no keywords or types (e.g., "solution(n)"). For Java, the full method signature (e.g., "int solution(int n)").
+    - "function_stub": The function name and its parameters. For Python, no keywords or types (e.g., "solution(n)"). For C and Java, the full method signature.
     - "example_input": A simple, clear example of input.
     - "example_output": The corresponding output for the example input.
     - "relative_difficulty": An integer from 1 (very easy for this level) to 5 (very hard for this level) based on your assessment of the problem's complexity.
@@ -375,33 +378,27 @@ def show_dashboard():
         st.write("다른 언어로 풀기:")
         cols = st.columns(3)
         problem_id = problem.get('id')
+        
+        def switch_language(lang):
+            user_info['language'] = lang
+            st.session_state.user_info = user_info
+            users = load_users()
+            users[st.session_state.username]['language'] = lang
+            save_users(users)
+            # 현재 언어의 코드 에디터 상태를 삭제하여 리셋
+            if f"ace_editor_{problem_id}_{st.session_state.user_info['language']}" in st.session_state:
+                del st.session_state[f"ace_editor_{problem_id}_{st.session_state.user_info['language']}"]
+            st.rerun()
+
         with cols[0]:
             if st.button("Python", use_container_width=True, disabled=(user_info['language'] == 'Python')):
-                user_info['language'] = 'Python'
-                st.session_state.user_info = user_info
-                users = load_users()
-                users[st.session_state.username]['language'] = 'Python'
-                save_users(users)
-                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
-                st.rerun()
+                switch_language('Python')
         with cols[1]:
             if st.button("C", use_container_width=True, disabled=(user_info['language'] == 'C')):
-                user_info['language'] = 'C'
-                st.session_state.user_info = user_info
-                users = load_users()
-                users[st.session_state.username]['language'] = 'C'
-                save_users(users)
-                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
-                st.rerun()
+                switch_language('C')
         with cols[2]:
             if st.button("Java", use_container_width=True, disabled=(user_info['language'] == 'Java')):
-                user_info['language'] = 'Java'
-                st.session_state.user_info = user_info
-                users = load_users()
-                users[st.session_state.username]['language'] = 'Java'
-                save_users(users)
-                if f"code_{problem_id}" in st.session_state: del st.session_state[f"code_{problem_id}"]
-                st.rerun()
+                switch_language('Java')
         
         # --- 힌트 표시 및 닫기 ---
         if 'current_hint' in st.session_state and st.session_state.current_hint:
@@ -447,17 +444,10 @@ def show_dashboard():
         if language == "Python":
             template = f"def {clean_stub}:\n    answer = 0\n    return answer"
         elif language == "C":
-            template = f"""#include <stdio.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
-int {clean_stub} {{
-    
-}}
-"""
+            template = f"{clean_stub} {{\n    \n}}"
         elif language == "Java":
             template = f"""class Solution {{
-    public {clean_stub} {{
+    {clean_stub} {{
         
     }}
 }}
@@ -466,15 +456,15 @@ int {clean_stub} {{
             template = ""
 
         user_code = st_ace(
-            value=st.session_state.get(f"code_{problem.get('id')}", template),
+            value=st.session_state.get(f"ace_editor_{problem.get('id')}_{language}", template),
             language=lang_map.get(language, "text"),
             theme="tomorrow_night_blue", keybinding="vscode", font_size=14,
             height=300, wrap=True, auto_update=True,
-            key=f"ace_editor_{problem.get('id')}"
+            key=f"ace_editor_{problem.get('id')}_{language}"
         )
         
         if st.button("AI에게 채점받기"):
-            st.session_state[f"code_{problem.get('id')}"] = user_code
+            st.session_state[f"ace_editor_{problem.get('id')}_{language}"] = user_code
             if not user_code.strip(): st.warning("코드를 입력해주세요.")
             else:
                 api_usage = load_api_usage()
