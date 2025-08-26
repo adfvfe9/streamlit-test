@@ -5,9 +5,10 @@
         "language": "Python",
         "level": "Level 1: \uae30\ucd08 \ubb38\ubc95",
         "solved_problems": [
-            "PY_L1_004"
+            "PY_L1_004",
+            "AI_PY_L1_005"
         ],
-        "total_score": 10
+        "total_score": 15
     },
     "bedulge": {
         "password": "2aec84e1dc18467c7f3e02e381f18df604b8b949a9271ac32acc231a22314887",

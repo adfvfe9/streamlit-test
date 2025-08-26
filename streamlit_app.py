@@ -146,7 +146,7 @@ async def grade_with_ai_real(user_code, problem, language):
         return parsed_response.get("is_correct", False), parsed_response.get("feedback", "AI 응답 처리 실패")
     return False, "AI 채점 중 오류 발생. API 키 또는 네트워크를 확인해주세요."
 
-async def generate_ai_problem(language, level):
+async def generate_ai_problem(language, level, solved_problem_ids):
     # 레벨별로 문제의 주제와 난이도를 상세하게 지시합니다.
     topic_instruction = ""
     if level == "Level 1: 기초 문법":
@@ -162,6 +162,13 @@ async def generate_ai_problem(language, level):
     else:
         topic_instruction = "The topic should be about general programming concepts."
 
+    # 이전에 푼 문제 목록을 프롬프트에 추가하여 다양성을 확보합니다.
+    solved_list_str = ", ".join(solved_problem_ids)
+    diversity_instruction = f"IMPORTANT: Create a new and creative problem that is fundamentally different from the problems the user has already solved. Here is a list of solved problem IDs to avoid: [{solved_list_str}]."
+    if not solved_problem_ids:
+        diversity_instruction = "IMPORTANT: Create a new and creative problem."
+
+
     lang_instruction = ""
     if language == "Java":
         lang_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including `public`, return type and parameters (e.g., `public int solution(int n)`, `public String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
@@ -171,13 +178,14 @@ async def generate_ai_problem(language, level):
 
     prompt = f"""Create a new, unique programming problem for a user learning {language}.
     {topic_instruction}
+    {diversity_instruction}
     The problem must be solvable within a single function.
     {lang_instruction}
 
     Respond ONLY in JSON format with the following keys:
-    - "id": A unique string identifier (e.g., "AI_PY_L1_...")
+    - "id": A unique string identifier (e.g., "AI_PY_L1_...") that is NOT in the solved list.
     - "title": A short, descriptive title in Korean.
-    - "description": A clear problem description in Korean.
+    - "description": A clear problem description in Korean. CRITICAL: If you mention parameter names in the description, they MUST EXACTLY match the names used in the 'function_stub'. For example, if the stub is 'solution(num1, num2)', the description must use 'num1' and 'num2', not 'a' and 'b'.
     - "function_stub": The function name and its parameters. For Python, no keywords or types (e.g., "solution(n)"). For C and Java, the full method signature.
     - "example_input": A simple, clear example of input.
     - "example_output": The corresponding output for the example input.
@@ -345,28 +353,16 @@ def show_dashboard():
     api_usage = load_api_usage()
     is_limit_reached = api_usage['daily_count'] >= DAILY_API_LIMIT or len(api_usage['timestamps']) >= RPM_LIMIT
 
-    # --- 채점 결과가 있으면 표시 ---
-    if 'grading_result' in st.session_state:
-        result = st.session_state.grading_result
-        if result['correct']:
-            st.success(f"채점 결과: {result['feedback']}")
-            st.info(f"{result['points_awarded']}점을 획득했습니다! 총 점수: {user_info['total_score']}점")
-            st.balloons()
-        else:
-            st.error(f"채점 결과: {result['feedback']}")
-
-        if st.button("다음 문제로", type="primary"):
-            del st.session_state.grading_result
-            st.rerun()
-        return # 채점 결과를 보여줄 때는 문제 생성 버튼 등을 숨김
-
     # --- 새 문제 생성 버튼 ---
     if st.button("🤖 AI로 새로운 문제 생성하기", type="primary", use_container_width=True, disabled=is_limit_reached):
+        if 'grading_result' in st.session_state:
+            del st.session_state.grading_result # 새 문제 생성 시 이전 채점 결과 삭제
         if is_limit_reached:
             st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="🚨")
         else:
             with st.spinner("AI가 당신만을 위한 새로운 문제를 만들고 있습니다..."):
-                problem = asyncio.run(generate_ai_problem(user_info['language'], user_info['level']))
+                solved_problems = user_info.get('solved_problems', [])
+                problem = asyncio.run(generate_ai_problem(user_info['language'], user_info['level'], solved_problems))
 
             if problem:
                 api_usage['daily_count'] += 1
@@ -380,6 +376,22 @@ def show_dashboard():
             st.rerun()
     elif is_limit_reached:
         st.warning("AI 기능이 일시적으로 비활성화되었습니다. (호출 제한 도달)")
+
+    # --- 채점 결과가 있으면 표시 ---
+    if 'grading_result' in st.session_state:
+        result = st.session_state.grading_result
+        if result['correct']:
+            # 정답일 경우, 성공 메시지를 한 번만 표시하고 다음 문제로 넘어갈 준비
+            st.success(f"채점 결과: {result['feedback']}")
+            st.info(f"{result['points_awarded']}점을 획득했습니다! 총 점수: {user_info['total_score']}점")
+            st.balloons()
+            if st.button("다음 문제로", type="primary"):
+                del st.session_state.grading_result
+                st.rerun()
+            return # 정답일 때는 아래 문제 표시 안 함
+        else:
+            # 오답일 경우, 피드백을 계속 표시
+            st.error(f"채점 결과: {result['feedback']}")
 
 
     if "current_problem" in st.session_state and st.session_state.current_problem:
@@ -467,6 +479,8 @@ def show_dashboard():
         )
 
         if st.button("AI에게 채점받기"):
+            if 'grading_result' in st.session_state:
+                del st.session_state.grading_result # 이전 채점 결과 삭제
             if not user_code.strip(): st.warning("코드를 입력해주세요.")
             else:
                 api_usage = load_api_usage()
@@ -483,16 +497,21 @@ def show_dashboard():
                     if is_correct:
                         users = load_users()
                         user = users[st.session_state.username]
+                        # solved_problems가 리스트인지 확인하고, 아니면 초기화
+                        if not isinstance(user.get('solved_problems'), list):
+                            user['solved_problems'] = []
                         user['solved_problems'].append(problem['id'])
                         user['total_score'] = user.get('total_score', 0) + points
                         save_users(users)
                         st.session_state.user_info = user
 
                         st.session_state.grading_result = {"correct": True, "feedback": feedback, "points_awarded": points}
-
+                        
+                        # 정답을 맞혔으므로 현재 문제 관련 상태 초기화
                         del st.session_state.current_problem
                         if 'current_problem_points' in st.session_state: del st.session_state.current_problem_points
                         if 'current_hint' in st.session_state: del st.session_state.current_hint
+                        
                         st.rerun()
                     else:
                         st.session_state.grading_result = {"correct": False, "feedback": feedback}
