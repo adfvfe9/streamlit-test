@@ -147,12 +147,20 @@ async def grade_with_ai_real(user_code, problem, language):
     return False, "AI 채점 중 오류 발생. API 키 또는 네트워크를 확인해주세요."
 
 async def generate_ai_problem(language, level):
-    level_map = {
-        "Level 1: 기초 문법": "very basic syntax", "Level 2: 자료 구조": "basic data structures",
-        "Level 3: 알고리즘": "fundamental algorithms", "Level 4: 심화": "complex topics",
-        "Level 5: 전문가": "advanced topics"
-    }
-    topic = level_map.get(level, "general programming concepts")
+    # 레벨별로 문제의 주제와 난이도를 상세하게 지시합니다.
+    topic_instruction = ""
+    if level == "Level 1: 기초 문법":
+        topic_instruction = "The topic should be about fundamental syntax, variables, basic operators, and simple conditional statements (if/else). The problem must be very easy, suitable for an absolute beginner."
+    elif level == "Level 2: 자료 구조":
+        topic_instruction = "The topic should involve basic data structures like arrays (or lists in Python), strings, and the use of loops (for, while) to iterate through them. The problem should require slightly more complex logic than basic syntax."
+    elif level == "Level 3: 알고리즘":
+        topic_instruction = "The topic should be about fundamental algorithms like searching (linear, binary search), sorting (bubble sort, selection sort), or basic hash map/dictionary usage. The problem should require a clear algorithmic approach to solve."
+    elif level == "Level 4: 심화":
+        topic_instruction = "Create a significantly challenging problem. The topic could involve simple dynamic programming, recursion with memoization, or basic graph traversal (BFS, DFS). It should require combining multiple concepts and careful implementation."
+    elif level == "Level 5: 전문가":
+        topic_instruction = "Create an expert-level, very difficult programming problem. The topic could be about advanced algorithms like Dijkstra's or A*, complex data structure manipulations (e.g., heaps, tries), or problems requiring clever optimizations. The solution should be non-trivial and require deep algorithmic thinking."
+    else:
+        topic_instruction = "The topic should be about general programming concepts."
 
     lang_instruction = ""
     if language == "Java":
@@ -162,7 +170,7 @@ async def generate_ai_problem(language, level):
 
 
     prompt = f"""Create a new, unique programming problem for a user learning {language}.
-    The topic should be about {topic}.
+    {topic_instruction}
     The problem must be solvable within a single function.
     {lang_instruction}
 
@@ -217,9 +225,9 @@ async def get_ai_hint(problem, language):
     schema = {"type": "OBJECT", "properties": {"hint": {"type": "STRING"}}, "required": ["hint"]}
 
     parsed_response = await call_gemini_api(prompt, schema)
-    if parsed_response:
-        return parsed_response.get("hint", "힌트를 생성하는 데 실패했습니다.")
-    return "힌트 생성 중 오류가 발생했습니다."
+    if parsed_response and "hint" in parsed_response:
+        return parsed_response.get("hint")
+    return None # 실패 시 None 반환
 
 
 # --- UI 컴포넌트 ---
@@ -402,22 +410,30 @@ def show_dashboard():
             elif is_limit_reached:
                 st.toast("API 호출 한도에 도달했습니다. 잠시 후 다시 시도해주세요.", icon="🚨")
             else:
+                hint_text = None
                 with st.spinner("AI가 힌트를 생성 중입니다..."):
                     hint_text = asyncio.run(get_ai_hint(problem, user_info['language']))
 
-                api_usage = load_api_usage()
-                api_usage['daily_count'] += 1
-                api_usage['timestamps'].append(time.time())
-                save_api_usage(api_usage)
-                users = load_users()
-                user = users[st.session_state.username]
-                user['total_score'] = user.get('total_score', 0) - hint_cost
-                save_users(users)
-                st.session_state.user_info = user
+                # --- 힌트 생성 성공 여부 확인 ---
+                if hint_text:
+                    # 성공 시: API 사용량 기록, 점수 차감, 힌트 표시
+                    api_usage = load_api_usage()
+                    api_usage['daily_count'] += 1
+                    api_usage['timestamps'].append(time.time())
+                    save_api_usage(api_usage)
+                    
+                    users = load_users()
+                    user = users[st.session_state.username]
+                    user['total_score'] = user.get('total_score', 0) - hint_cost
+                    save_users(users)
+                    st.session_state.user_info = user
 
-                st.session_state.current_hint = hint_text
-                st.toast(f"{hint_cost}점을 사용하여 힌트를 얻었습니다!", icon="💰")
-                st.rerun()
+                    st.session_state.current_hint = hint_text
+                    st.toast(f"{hint_cost}점을 사용하여 힌트를 얻었습니다!", icon="💰")
+                    st.rerun()
+                else:
+                    # 실패 시: 오류 메시지 표시 (점수 차감 없음)
+                    st.error("힌트 생성에 실패했습니다. 점수는 차감되지 않았습니다.")
 
         language = user_info['language']
         lang_map = {"Python": "python", "C": "c_cpp", "Java": "java"}
@@ -451,7 +467,6 @@ def show_dashboard():
         )
 
         if st.button("AI에게 채점받기"):
-            # st.session_state[editor_key] = user_code # <- THIS LINE IS REMOVED
             if not user_code.strip(): st.warning("코드를 입력해주세요.")
             else:
                 api_usage = load_api_usage()
