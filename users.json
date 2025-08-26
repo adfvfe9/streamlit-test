@@ -15,8 +15,9 @@
         "language": "Java",
         "level": "Level 2: \uc790\ub8cc \uad6c\uc870",
         "solved_problems": [
-            "PY1002"
+            "PY1002",
+            "AI_JV_L1_DS001"
         ],
-        "total_score": 10
+        "total_score": 25
     }
 }

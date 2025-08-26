@@ -20,12 +20,12 @@ st.set_page_config(
 
 # --- 데이터 파일 및 API 제한 설정 ---
 USER_DATA_FILE = "users.json"
-PROBLEM_DATA_FILE = "problems.json" 
+PROBLEM_DATA_FILE = "problems.json"
 API_USAGE_FILE = "api_usage.json"
 # Gemini 2.5 Flash 무료 등급 기준(250 RPD)보다 안전하게 설정
-DAILY_API_LIMIT = 200 
+DAILY_API_LIMIT = 200
 # Gemini 2.5 Flash 무료 등급 기준(10 RPM)
-RPM_LIMIT = 10 
+RPM_LIMIT = 10
 
 # --- API 사용량 추적 기능 ---
 def load_api_usage():
@@ -33,7 +33,7 @@ def load_api_usage():
     today = datetime.now().strftime("%Y-%m-%d")
     if not os.path.exists(API_USAGE_FILE):
         return {"date": today, "daily_count": 0, "timestamps": []}
-    
+
     try:
         with open(API_USAGE_FILE, "r") as f:
             usage_data = json.load(f)
@@ -44,11 +44,11 @@ def load_api_usage():
     if usage_data.get("date") != today:
         usage_data = {"date": today, "daily_count": 0, "timestamps": []}
         save_api_usage(usage_data)
-        
+
     # 1분이 지난 타임스탬프 제거
     current_time = time.time()
     usage_data["timestamps"] = [t for t in usage_data.get("timestamps", []) if current_time - t < 60]
-    
+
     return usage_data
 
 def save_api_usage(usage_data):
@@ -68,7 +68,7 @@ def load_problems():
 def load_users():
     if not os.path.exists(USER_DATA_FILE):
         with open(USER_DATA_FILE, "w") as f: json.dump({}, f)
-    
+
     try:
         with open(USER_DATA_FILE, "r") as f:
             return json.load(f)
@@ -99,9 +99,18 @@ def apply_custom_style():
 
 # --- Gemini API를 이용한 AI 기능 ---
 async def call_gemini_api(prompt, response_schema):
-    api_key = "AIzaSyBHuZrqrXFOiYfV0SDzmlvdjDXbX3LcM34"
+    # st.secrets를 사용하여 API 키를 안전하게 불러옵니다.
+    try:
+        api_key = st.secrets["GEMINI_API_KEY"]
+    except FileNotFoundError:
+        st.error("`.streamlit/secrets.toml` 파일을 찾을 수 없습니다. 프로젝트에 `.streamlit/secrets.toml` 파일을 생성하고 API 키를 추가해주세요.")
+        return None
+    except KeyError:
+        st.error("`.streamlit/secrets.toml` 파일에 `GEMINI_API_KEY`를 설정해주세요.")
+        return None
+
     api_url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-05-20:generateContent?key={api_key}"
-    
+
     payload = {
         "contents": [{"parts": [{"text": prompt}]}],
         "generationConfig": {
@@ -118,6 +127,7 @@ async def call_gemini_api(prompt, response_schema):
             return json.loads(response_text)
     except Exception as e:
         print(f"API Error: {e}")
+        st.error(f"API 호출 중 오류가 발생했습니다: {e}")
         return None
 
 async def grade_with_ai_real(user_code, problem, language):
@@ -130,7 +140,7 @@ async def grade_with_ai_real(user_code, problem, language):
         "properties": { "is_correct": {"type": "BOOLEAN"}, "feedback": {"type": "STRING"} },
         "required": ["is_correct", "feedback"]
     }
-    
+
     parsed_response = await call_gemini_api(prompt, schema)
     if parsed_response:
         return parsed_response.get("is_correct", False), parsed_response.get("feedback", "AI 응답 처리 실패")
@@ -143,7 +153,7 @@ async def generate_ai_problem(language, level):
         "Level 5: 전문가": "advanced topics"
     }
     topic = level_map.get(level, "general programming concepts")
-    
+
     lang_instruction = ""
     if language == "Java":
         lang_instruction = "CRITICAL INSTRUCTION FOR JAVA: For the 'function_stub', you MUST provide the full method signature including `public`, return type and parameters (e.g., `public int solution(int n)`, `public String[] solution(String[] words)`). You MUST use primitive array types (e.g., `int[] arr`) instead of Collection types like `List<String>`."
@@ -155,7 +165,7 @@ async def generate_ai_problem(language, level):
     The topic should be about {topic}.
     The problem must be solvable within a single function.
     {lang_instruction}
-    
+
     Respond ONLY in JSON format with the following keys:
     - "id": A unique string identifier (e.g., "AI_PY_L1_...")
     - "title": A short, descriptive title in Korean.
@@ -165,30 +175,30 @@ async def generate_ai_problem(language, level):
     - "example_output": The corresponding output for the example input.
     - "relative_difficulty": An integer from 1 (very easy for this level) to 5 (very hard for this level) based on your assessment of the problem's complexity.
     """
-    
+
     schema = {
         "type": "OBJECT",
         "properties": {
             "id": {"type": "STRING"}, "title": {"type": "STRING"}, "description": {"type": "STRING"},
             "function_stub": {"type": "STRING"},
-            "example_input": {"type": "STRING"}, "example_output": {"type": "STRING"}, 
+            "example_input": {"type": "STRING"}, "example_output": {"type": "STRING"},
             "relative_difficulty": {"type": "INTEGER"}
         },
         "required": ["id", "title", "description", "function_stub", "example_input", "example_output", "relative_difficulty"]
     }
-    
+
     problem_data = await call_gemini_api(prompt, schema)
     if problem_data:
         level_num_match = re.search(r'Level (\d+)', level)
         level_num = int(level_num_match.group(1)) if level_num_match else 1
         base_points = level_num * 10
-        
+
         relative_difficulty = problem_data.get("relative_difficulty", 3)
         adjustment_factor = (relative_difficulty - 3) * 0.25
-        
+
         final_points = int(base_points * (1 + adjustment_factor))
         problem_data['points'] = max(5, final_points)
-        
+
     return problem_data
 
 
@@ -203,9 +213,9 @@ async def get_ai_hint(problem, language):
     Problem Description: {problem['description']}
 
     Respond ONLY in JSON format with one key: "hint" (string)."""
-    
+
     schema = {"type": "OBJECT", "properties": {"hint": {"type": "STRING"}}, "required": ["hint"]}
-    
+
     parsed_response = await call_gemini_api(prompt, schema)
     if parsed_response:
         return parsed_response.get("hint", "힌트를 생성하는 데 실패했습니다.")
@@ -226,7 +236,7 @@ def show_login_signup_page():
             username = st.text_input("사용자 이름")
             password = st.text_input("비밀번호", type="password")
             login_button = st.form_submit_button("로그인")
-        
+
         if login_button:
             users = load_users()
             if username in users and users[username]["password"] == hash_password(password):
@@ -278,10 +288,10 @@ def run_skill_test(language):
         score_percent = (score / len(questions)) * 100 if questions else 0
         level_index = min(len(levels) - 1, int(score_percent // 20))
         level = levels[level_index]
-        
+
         users = load_users()
         user = users[st.session_state["username"]]
-        
+
         user.update({"skill_test_taken": True, "language": language, "level": level})
         save_users(users)
         st.session_state.user_info = user
@@ -293,15 +303,15 @@ def show_dashboard():
     user_info = st.session_state.user_info
     st.sidebar.header(f"🧑‍💻 {st.session_state.username}님")
     st.sidebar.metric("총 획득 점수", f"{user_info.get('total_score', 0)} 점")
-    
+
     api_usage = load_api_usage()
     st.sidebar.metric("오늘 AI 사용량", f"{api_usage['daily_count']} / {DAILY_API_LIMIT} 회")
     st.sidebar.metric("분당 AI 사용량", f"{len(api_usage['timestamps'])} / {RPM_LIMIT} 회")
 
-    
+
     st.sidebar.divider()
     st.sidebar.subheader("학습 설정")
-    
+
     languages = ["Python", "C", "Java"]
     new_lang = st.sidebar.selectbox("학습 언어 변경", languages, index=languages.index(user_info['language']))
     level_options = ["Level 1: 기초 문법", "Level 2: 자료 구조", "Level 3: 알고리즘", "Level 4: 심화", "Level 5: 전문가"]
@@ -323,7 +333,7 @@ def show_dashboard():
 
     st.markdown(f'<p class="main-title">"{user_info["language"]}" 학습 대시보드</p>', unsafe_allow_html=True)
     st.info(f"현재 **{user_info['level']}** 레벨의 문제를 풀고 있습니다.")
-    
+
     api_usage = load_api_usage()
     is_limit_reached = api_usage['daily_count'] >= DAILY_API_LIMIT or len(api_usage['timestamps']) >= RPM_LIMIT
 
@@ -336,7 +346,7 @@ def show_dashboard():
             st.balloons()
         else:
             st.error(f"채점 결과: {result['feedback']}")
-        
+
         if st.button("다음 문제로", type="primary"):
             del st.session_state.grading_result
             st.rerun()
@@ -349,7 +359,7 @@ def show_dashboard():
         else:
             with st.spinner("AI가 당신만을 위한 새로운 문제를 만들고 있습니다..."):
                 problem = asyncio.run(generate_ai_problem(user_info['language'], user_info['level']))
-            
+
             if problem:
                 api_usage['daily_count'] += 1
                 api_usage['timestamps'].append(time.time())
@@ -366,14 +376,14 @@ def show_dashboard():
 
     if "current_problem" in st.session_state and st.session_state.current_problem:
         problem = st.session_state.current_problem
-        points = st.session_state.get('current_problem_points', problem['points'])
+        points = st.session_state.get('current_problem_points', problem.get('points', 5))
         st.markdown(f"""<div class="problem-card">
-            <p class="points">획득 가능 점수: {points} / {problem['points']} 점</p>
-            <h3>{problem['title']}</h3> <p>{problem['description']}</p><hr>
-            <b>입력 예시:</b><pre><code>{problem['example_input']}</code></pre>
-            <b>출력 예시:</b><pre><code>{problem['example_output']}</code></pre>
+            <p class="points">획득 가능 점수: {points} / {problem.get('points', 5)} 점</p>
+            <h3>{problem.get('title', 'No Title')}</h3> <p>{problem.get('description', 'No Description')}</p><hr>
+            <b>입력 예시:</b><pre><code>{problem.get('example_input', '')}</code></pre>
+            <b>출력 예시:</b><pre><code>{problem.get('example_output', '')}</code></pre>
             </div>""", unsafe_allow_html=True)
-        
+
         # --- 힌트 표시 및 닫기 ---
         if 'current_hint' in st.session_state and st.session_state.current_hint:
             cols = st.columns([10, 1])
@@ -383,9 +393,9 @@ def show_dashboard():
                 if st.button("X", key="close_hint"):
                     del st.session_state.current_hint
                     st.rerun()
-        
+
         hint_cost = max(5, int(user_info.get('total_score', 0) * 0.1))
-        
+
         if st.button(f"💡 힌트 보기 ({hint_cost}점 소모)", disabled=is_limit_reached):
             if user_info.get('total_score', 0) < hint_cost:
                 st.warning(f"힌트를 보려면 최소 {hint_cost}점이 필요합니다.")
@@ -394,7 +404,7 @@ def show_dashboard():
             else:
                 with st.spinner("AI가 힌트를 생성 중입니다..."):
                     hint_text = asyncio.run(get_ai_hint(problem, user_info['language']))
-                
+
                 api_usage = load_api_usage()
                 api_usage['daily_count'] += 1
                 api_usage['timestamps'].append(time.time())
@@ -404,14 +414,14 @@ def show_dashboard():
                 user['total_score'] = user.get('total_score', 0) - hint_cost
                 save_users(users)
                 st.session_state.user_info = user
-                
+
                 st.session_state.current_hint = hint_text
                 st.toast(f"{hint_cost}점을 사용하여 힌트를 얻었습니다!", icon="💰")
                 st.rerun()
 
         language = user_info['language']
         lang_map = {"Python": "python", "C": "c_cpp", "Java": "java"}
-        
+
         function_stub = problem.get("function_stub", "solution()")
         clean_stub = function_stub.replace("def ", "").replace(":", "").strip()
 
@@ -429,9 +439,9 @@ def show_dashboard():
 """
         else:
             template = ""
-        
+
         editor_key = f"ace_editor_{problem.get('id')}_{language}"
-        
+
         user_code = st_ace(
             value=st.session_state.get(editor_key, template),
             language=lang_map.get(language, "text"),
@@ -439,9 +449,9 @@ def show_dashboard():
             height=300, wrap=True, auto_update=True,
             key=editor_key
         )
-        
+
         if st.button("AI에게 채점받기"):
-            st.session_state[editor_key] = user_code
+            # st.session_state[editor_key] = user_code # <- THIS LINE IS REMOVED
             if not user_code.strip(): st.warning("코드를 입력해주세요.")
             else:
                 api_usage = load_api_usage()
@@ -450,7 +460,7 @@ def show_dashboard():
                 else:
                     with st.spinner("AI가 코드를 채점 중입니다..."):
                         is_correct, feedback = asyncio.run(grade_with_ai_real(user_code, problem, user_info['language']))
-                    
+
                     api_usage['daily_count'] += 1
                     api_usage['timestamps'].append(time.time())
                     save_api_usage(api_usage)
@@ -462,16 +472,16 @@ def show_dashboard():
                         user['total_score'] = user.get('total_score', 0) + points
                         save_users(users)
                         st.session_state.user_info = user
-                        
+
                         st.session_state.grading_result = {"correct": True, "feedback": feedback, "points_awarded": points}
-                        
+
                         del st.session_state.current_problem
                         if 'current_problem_points' in st.session_state: del st.session_state.current_problem_points
                         if 'current_hint' in st.session_state: del st.session_state.current_hint
                         st.rerun()
                     else:
                         st.session_state.grading_result = {"correct": False, "feedback": feedback}
-                        penalty = int(problem['points'] * 0.2)
+                        penalty = int(problem.get('points', 5) * 0.2)
                         st.session_state.current_problem_points = max(0, points - penalty)
                         st.rerun()
 
@@ -489,7 +499,7 @@ def main():
                 st.session_state.test_language = lang
                 st.rerun()
             if st.session_state.get('start_test', False):
-                 run_skill_test(st.session_state.test_language)
+                run_skill_test(st.session_state.test_language)
         else:
             show_dashboard()
     else:
